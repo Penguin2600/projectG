@@ -57,7 +57,7 @@ def main():
     greenAvg=collections.deque(maxlen=6)
     blueAvg=collections.deque(maxlen=6)
 
-    hRed=0
+    hRed=0.0
     hgreen=1.2
     hBlue=1.5
 
@@ -65,8 +65,14 @@ def main():
     greenMult=1.0
     blueMult=1.4
 
-    hHi=100
-    hLo=50
+    hHi=112
+    hLo=56
+
+    recoveredClock=0
+    recoveredData=0
+    recoveredOOB=0
+    recoveredStream=[]
+    lastClock=0
 
     #Do Setup
     wiringpi.wiringPiSetup()
@@ -105,18 +111,30 @@ def main():
 
         if sRed > hHi:
             hRed=1.0
+            recoveredData=1
         if sRed < hLo:
+            recoveredData=0
             hRed=0.0
 
         if sGreen > hHi:
             hGreen=1.4
+            recoveredOOB=1
         if sGreen < hLo:
             hGreen=1.2
+            recoveredOOB=0
 
         if sBlue > hHi:
             hBlue=1.7
+            recoveredClock=1
         if sBlue < hLo:
             hBlue=1.5
+            recoveredClock=0
+
+        if lastClock==1 and recoveredClock==0:
+            recoveredStream.append(recoveredData)
+            print recoveredStream
+            
+        lastClock=recoveredClock
 
         dataFile.write("%d,%d,%d,%d,%d,%d,%d,%f,%f,%f\n" % (redChannel, greenChannel, blueChannel,step,sRed,sGreen,sBlue,hRed,hGreen,hBlue,))
 

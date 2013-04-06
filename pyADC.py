@@ -106,7 +106,7 @@ def main():
 
         if sGreen > hHi:
             hGreen=1
-        if sG < hLo:
+        if sGreen < hLo:
             hGreen=0
 
         if sBlue > hHi:

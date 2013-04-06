@@ -58,11 +58,11 @@ def main():
     blueAvg=collections.deque(maxlen=6)
 
     hRed=0
-    hgreen=0
-    hBlue=0
+    hgreen=1.2
+    hBlue=1.5
 
     redMult=1.0
-    greenMult=1.1
+    greenMult=1.0
     blueMult=1.4
 
     hHi=100

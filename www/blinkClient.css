@@ -1,0 +1,31 @@
+html, body {
+  background-color: #111;
+}
+
+#wrapper {
+  width: 400px;
+  height: 330px;
+  margin: 200px auto;
+  padding: 20px;
+  background-color: #000;
+}
+
+#blink-div {
+  background-color: #000;
+  border:2px solid #FFF;
+  width: 200px;
+  height: 200px;
+  margin: 20px auto;
+}
+
+#our-string {
+  width: 300px;
+  margin: 5px auto;
+  display: block;
+}
+
+#send-button {
+  width: 100px;
+  margin: 20px auto;
+  display: block;
+}

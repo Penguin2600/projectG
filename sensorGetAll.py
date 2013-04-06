@@ -118,7 +118,7 @@ def main():
         if sBlue < hLo:
             hBlue=1.5
 
-        dataFile.write("%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n" % (redChannel, greenChannel, blueChannel,step,sRed,sGreen,sBlue,hRed,hGreen,hBlue,))
+        dataFile.write("%d,%d,%d,%d,%d,%d,%d,%f,%f,%f\n" % (redChannel, greenChannel, blueChannel,step,sRed,sGreen,sBlue,hRed,hGreen,hBlue,))
 
         time.sleep(0.01)
 

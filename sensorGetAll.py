@@ -108,15 +108,12 @@ def main():
             hGreen=1
         if sGreen < hLo:
             hGreen=0
-
         if sBlue > hHi:
             hBlue=1
         if sBlue < hLo:
             hBlue=0
 
-        #dataFile.write("%d,%d,%d,%d,%d,%d,%d\n" % (redChannel, greenChannel, blueChannel,step,sRed,sGreen,sBlue))
-
-        dataFile.write("%d,%d,%d,%d\n" % (hRed, hGreen, hBlue, step))
+        dataFile.write("%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n" % (redChannel, greenChannel, blueChannel,step,sRed,sGreen,sBlue,hRed,hGreen,hBlue,))
 
         time.sleep(0.01)
 

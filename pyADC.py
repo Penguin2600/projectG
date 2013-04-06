@@ -4,26 +4,6 @@ import os
 import wiringpi
 import collections
 
-def init():
-
-    # change these as desired
-    SPICLK = 1
-    SPIMISO = 4
-    SPIMOSI = 5
-    SPICS = 6
-
-    #Do Setup
-    wiringpi.wiringPiSetup()
-
-    # set up the SPI interface pins
-    wiringpi.pinMode(SPIMOSI, 1)
-    wiringpi.pinMode(SPIMISO, 0)
-    wiringpi.pinMode(SPICLK,  1)
-    wiringpi.pinMode(SPICS,   1)
-
-    wiringpi.pullUpDnControl(SPIMISO, 0)
-
-
 # read SPI data from MCP3008 chip, 8 possible adc's (0 thru 7)
 def readadc(adcnum, clockpin, mosipin, misopin, cspin):
     if ((adcnum > 7) or (adcnum < 0)):
@@ -60,7 +40,11 @@ def readadc(adcnum, clockpin, mosipin, misopin, cspin):
 
 def main():
 
-    init()
+    # change these as desired
+    SPICLK = 1
+    SPIMISO = 4
+    SPIMOSI = 5
+    SPICS = 6
 
     redPin=0
     greenPin=1
@@ -71,6 +55,17 @@ def main():
     redAvg=collections.deque(maxlen=6)
     greenAvg=collections.deque(maxlen=6)
     blueAvg=collections.deque(maxlen=6)
+
+    #Do Setup
+    wiringpi.wiringPiSetup()
+
+    # set up the SPI interface pins
+    wiringpi.pinMode(SPIMOSI, 1)
+    wiringpi.pinMode(SPIMISO, 0)
+    wiringpi.pinMode(SPICLK,  1)
+    wiringpi.pinMode(SPICS,   1)
+
+    wiringpi.pullUpDnControl(SPIMISO, 0)
 
     while True:
         step=step+1

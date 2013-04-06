@@ -1,0 +1,42 @@
+reset
+
+# wxt
+set terminal wxt size 640,480 enhanced font 'Verdana,9' persist
+
+# png
+#set terminal pngcairo size 1024,768 enhanced font 'Verdana,9'
+#set output 'plot.png'
+
+# svg
+#set terminal svg size 410,250 fname 'Verdana, Helvetica, Arial, sans-serif' \
+#fsize '9' rounded dashed
+#set output 'plot.svg'
+
+# define axis
+# remove border on top and right and set color to gray
+set style line 11 lc rgb '#808080' lt 1
+set border 3 back ls 11
+set tics nomirror
+
+# define grid
+set style line 12 lc rgb '#808080' lt 0 lw 1
+set grid back ls 12
+
+# color definitions
+set style line 1 lc rgb '#8b1a0e' pt 1 ps 1 lt 1 lw 2 # --- red
+set style line 2 lc rgb '#5e9c36' pt 6 ps 1 lt 1 lw 2 # --- green
+set style line 3 lc rgb '#0e1a9c' pt 1 ps 1 lt 1 lw 2 # --- blue
+
+set key top right
+
+set xlabel 'Time'
+set ylabel 'Light level'
+
+#set xrange [0:1]
+set yrange [0:2]
+
+set datafile separator ","
+
+plot 'data.txt' u 4:1 t 'Red Level' with lines ls 1, 'data.txt' u 4:2 t 'Green Level' with lines ls 2, 'data.txt' u 4:3 t 'Blue Level' with lines ls 3
+
+#plot 'data.txt' using 4:1 with dots, 'data.txt' using 4:2 with dots, 'data.txt' using 4:5 with lines, 'data.txt' using 4:6 with lines

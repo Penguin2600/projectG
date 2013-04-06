@@ -52,9 +52,17 @@ def main():
 
     dataFile= open("data.txt", "w")
     step=0
+
     redAvg=collections.deque(maxlen=6)
     greenAvg=collections.deque(maxlen=6)
     blueAvg=collections.deque(maxlen=6)
+
+    hRed=0
+    hgreen=0
+    hBlue=0
+
+    hHi=100
+    hLo=50
 
     #Do Setup
     wiringpi.wiringPiSetup()
@@ -74,28 +82,42 @@ def main():
         blueChannel = readadc(bluePin, SPICLK, SPIMOSI, SPIMISO, SPICS)*1.2
             
         redAvg.append(redChannel)
-        x=0
+        sRed=0
         for i in redAvg:
-        	x+=i
-        x=x/len(redAvg)
+        	sRed+=i
+        sRed=sRed/len(redAvg)
 
         greenAvg.append(greenChannel)
-        y=0
+        sGreen=0
         for i in greenAvg:
-            y+=i
-        y=y/len(greenAvg)
+            sGreen+=i
+        sGreen=sGreen/len(greenAvg)
 
         blueAvg.append(blueChannel)
-        z=0
+        sBlue=0
         for i in blueAvg:
-            z+=i
-        z=z/len(blueAvg)
+            sBlue+=i
+        sBlue=sBlue/len(blueAvg)
 
-        dataFile.write("%d,%d,%d,%d,%d,%d,%d\n" % (redChannel, greenChannel, blueChannel,step,x,y,z))
-        lastGreen=greenChannel
-        lastRed=redChannel 
-        lastBlue=blueChannel
-   
+        if sRed > hHi:
+            hRed=1
+        if sRed < hLo:
+            hRed=0
+
+        if sGreen > hHi:
+            hGreen=1
+        if sG < hLo:
+            hGreen=0
+
+        if sBlue > hHi:
+            hBlue=1
+        if sBlue < hLo:
+            hBlue=0
+
+        #dataFile.write("%d,%d,%d,%d,%d,%d,%d\n" % (redChannel, greenChannel, blueChannel,step,sRed,sGreen,sBlue))
+
+        dataFile.write("%d,%d,%d,%d\n" % (hRed, hGreen, hBlue, step))
+
         time.sleep(0.01)
 
 if __name__ == "__main__":

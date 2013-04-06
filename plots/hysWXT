@@ -22,14 +22,16 @@ set tics nomirror
 set style line 12 lc rgb '#808080' lt 0 lw 1
 set grid back ls 12
 
-# color definitions
-set style line 1 lc rgb '#8b1a0e' pt 7 ps 1 lt 1 lw 2 # --- red
-set style line 2 lc rgb '#5e9c36' pt 5 ps 1 lt 1 lw 2 # --- green
-set style line 3 lc rgb '#0e1a9c' pt 9 ps 1 lt 1 lw 2 # --- blue
-
 set style data linespoints
 set style function lines
 set pointsize 1.2
+set pointinterval -1
+set pointintervalbox 3
+
+# color definitions
+set style line 1 lc rgb '#8b1a0e' pt 7 lt 1 lw 2 # --- red
+set style line 2 lc rgb '#5e9c36' pt 5 lt 1 lw 2 # --- green
+set style line 3 lc rgb '#0e1a9c' pt 9 lt 1 lw 2 # --- blue
 
 set key top right
 
@@ -41,4 +43,4 @@ set yrange [0:2]
 
 set datafile separator ","
 
-plot 'data.txt' u 4:8 t 'Red Level' with lines ls 1, 'data.txt' u 4:9 t 'Green Level' with lines ls 2, 'data.txt' u 4:10 t 'Blue Level' with lines ls 3
+plot 'data.txt' u 4:8 t 'Red Level' with linespoints ls 1, 'data.txt' u 4:9 t 'Green Level' with linespoints ls 2, 'data.txt' u 4:10 t 'Blue Level' with linespoints ls 3

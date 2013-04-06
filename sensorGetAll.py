@@ -61,6 +61,10 @@ def main():
     hgreen=0
     hBlue=0
 
+    redMult=1.0
+    greenMult=1.1
+    blueMult=1.4
+
     hHi=100
     hLo=50
 
@@ -77,9 +81,9 @@ def main():
 
     while True:
         step=step+1
-        redChannel = readadc(redPin, SPICLK, SPIMOSI, SPIMISO, SPICS)
-        greenChannel = readadc(greenPin, SPICLK, SPIMOSI, SPIMISO, SPICS)*1.2
-        blueChannel = readadc(bluePin, SPICLK, SPIMOSI, SPIMISO, SPICS)*1.2
+        redChannel = readadc(redPin, SPICLK, SPIMOSI, SPIMISO, SPICS) * redMult
+        greenChannel = readadc(greenPin, SPICLK, SPIMOSI, SPIMISO, SPICS) * greenMult
+        blueChannel = readadc(bluePin, SPICLK, SPIMOSI, SPIMISO, SPICS) * blueMult
             
         redAvg.append(redChannel)
         sRed=0
@@ -100,18 +104,19 @@ def main():
         sBlue=sBlue/len(blueAvg)
 
         if sRed > hHi:
-            hRed=1
+            hRed=1.0
         if sRed < hLo:
-            hRed=0
+            hRed=0.0
 
         if sGreen > hHi:
-            hGreen=1
+            hGreen=1.4
         if sGreen < hLo:
-            hGreen=0
+            hGreen=1.2
+
         if sBlue > hHi:
-            hBlue=1
+            hBlue=1.7
         if sBlue < hLo:
-            hBlue=0
+            hBlue=1.5
 
         dataFile.write("%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n" % (redChannel, greenChannel, blueChannel,step,sRed,sGreen,sBlue,hRed,hGreen,hBlue,))
 

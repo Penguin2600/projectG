@@ -4,36 +4,133 @@ import wiringpi
 import collections
 
 
-# read SPI data from MCP3008 chip, 8 possible adc's (0 thru 7)
-def read_adc(adcnum, clockpin, mosipin, misopin, cspin):
+class SpiConnection(object):
+    """Setus up vars for maintaining an SPI connection"""
+    def __init__(self, clk, miso, mosi, cs):
+        super(SpiConnection, self).__init__()
+        self.clkpin = clk
+        self.misopin = miso
+        self.mosipin = mosi
+        self.cspin = cs
+
+
+class AdcChannel(object):
+    """Sets up vars for maintaining an adc channel and its values"""
+    def __init__(self, adcpin, mult, hysteresisHigh, hysteresisLow, plotOffset):
+        super(AdcChannel, self).__init__()
+        self.adcpin = adcpin
+        self.multiplier = mult
+        self.plotOffset = plotOffset
+        self.hysteresisHigh = hysteresisHigh
+        self.hysteresisLow = hysteresisLow
+        self.hysteresisValue = 0
+        self.smoothWidth = 6
+        self.smoothedValue = 0
+        self.currentValue = 0
+        self.lastValue = 0
+        self.average = collections.deque(maxlen=self.smoothWidth)
+
+        for i in range(0, self.smoothWidth):
+            self.average.append(0)
+
+    def smooth_input(self):
+        self.average.append(self.currentValue)
+        self.smoothedValue = sum(self.average)/self.smoothWidth
+
+    def apply_hysteresis(self):
+        if self.smoothedValue > self.hysteresisHigh:
+            self.hysteresisValue = 1
+        if self.smoothedValue < self.hysteresisLow:
+            self.hysteresisValue = 0
+
+    @property
+    def currentValue(self):
+        return self.currentValue
+
+    @currentValue.setter
+    def currentValue(self, value):
+        self.currentValue = value
+        self.smooth_input()
+        self.apply_hysteresis()
+
+    @property
+    def lastValue(self):
+        return self.lastValue
+
+    @lastValue.setter
+    def lastValue(self, value):
+        self.lastValue = value
+
+
+class DataReconstructor(object):
+    """Reconstructs incomming data"""
+    def __init__(self, dataChannel, clockChannel):
+        super(DataReconstructor, self).__init__()
+        self.dataChannel = dataChannel
+        self.clockChannel = clockChannel
+        self.lastClock = 0
+        self.recoveredData = []
+
+    def process(self):
+
+        if self.lastClock == 1 and self.clockChannel.hysteresisValue == 0:
+            self.recoveredData.append(self.dataChannel.hysteresisValue)
+        self.lastClock = self.clockChannel.hysteresisValue
+
+
+class DataLogger(object):
+    """Dumps values list to comma separated file"""
+    def __init__(self, fileName):
+        super(DataLogger, self).__init__()
+        self.fileName = fileName
+
+    def log(self, *args):
+        self.dataFile = open(self.fileName, "w")
+        newLine = ','.join([repr(value) for value in enumerate(args)])
+        self.dataFile.write(newLine)
+        self.dataFile.close()
+
+
+def init_wiringpi(sCon):
+
+    wiringpi.wiringPiSetup()
+
+    wiringpi.pinMode(sCon.mosipin, 1)
+    wiringpi.pinMode(sCon.misopin, 0)
+    wiringpi.pinMode(sCon.clkpin,  1)
+    wiringpi.pinMode(sCon.cspin,   1)
+    wiringpi.pullUpDnControl(sCon.misopin, 0)
+
+
+def read_adc(adcnum, sCon):
+
     if ((adcnum > 7) or (adcnum < 0)):
         return -1
-    wiringpi.digitalWrite(cspin, 1)
-
-    wiringpi.digitalWrite(clockpin, 0)  # start clock low
-    wiringpi.digitalWrite(cspin, 0)     # bring CS low
+    wiringpi.digitalWrite(sCon.cspin, 1)
+    wiringpi.digitalWrite(sCon.clockpin, 0)  # start clock low
+    wiringpi.digitalWrite(sCon.cspin, 0)     # bring CS low
 
     commandout = adcnum
     commandout |= 0x18  # start bit + single-ended bit
     commandout <<= 3    # we only need to send 5 bits here
     for i in range(5):
         if (commandout & 0x80):
-            wiringpi.digitalWrite(mosipin, 1)
+            wiringpi.digitalWrite(sCon.mosipin, 1)
         else:
-            wiringpi.digitalWrite(mosipin, 0)
+            wiringpi.digitalWrite(sCon.mosipin, 0)
         commandout <<= 1
-        wiringpi.digitalWrite(clockpin, 1)
-        wiringpi.digitalWrite(clockpin, 0)
+        wiringpi.digitalWrite(sCon.clockpin, 1)
+        wiringpi.digitalWrite(sCon.clockpin, 0)
 
     adcout = 0
     # read in one empty bit, one null bit and 10 ADC bits
     for i in range(12):
-        wiringpi.digitalWrite(clockpin, 1)
-        wiringpi.digitalWrite(clockpin, 0)
+        wiringpi.digitalWrite(sCon.clockpin, 1)
+        wiringpi.digitalWrite(sCon.clockpin, 0)
         adcout <<= 1
-        if (wiringpi.digitalRead(misopin)):
+        if (wiringpi.digitalRead(sCon.misopin)):
             adcout |= 0x1
-    wiringpi.digitalWrite(cspin, 1)
+    wiringpi.digitalWrite(sCon.cspin, 1)
 
     adcout >>= 1       # first bit is 'null' so drop it
     return adcout
@@ -41,104 +138,31 @@ def read_adc(adcnum, clockpin, mosipin, misopin, cspin):
 
 def main():
 
-    SPICLK = 1
-    SPIMISO = 4
-    SPIMOSI = 5
-    SPICS = 6
-
-    redPin = 0
-    greenPin = 1
-    bluePin = 2
-
-    dataFile = open("data.txt", "w")
     step = 0
 
-    redAvg = collections.deque(maxlen=6)
-    greenAvg = collections.deque(maxlen=6)
-    blueAvg = collections.deque(maxlen=6)
+    sCon = SpiConnection(1, 4, 5, 6)
+    init_wiringpi(sCon)
 
-    hRed = 0.0
-    hgreen = 1.2
-    hBlue = 1.5
+    redChannel = AdcChannel(0, 1.0, 112, 56, 0.0)
+    greenChannel = AdcChannel(1, 1.0, 112, 56, 1.0)
+    blueChannel = AdcChannel(2, 1.4, 112, 56, 2.0)
 
-    redMult = 1.0
-    greenMult = 1.0
-    blueMult = 1.4
-
-    hHi = 112
-    hLo = 56
-
-    recoveredClock = 0
-    recoveredData = 0
-    recoveredOOB = 0
-    recoveredStream = []
-    lastClock = 0
-
-    #Do Setup
-    wiringpi.wiringPiSetup()
-
-    # set up the SPI interface pins
-    wiringpi.pinMode(SPIMOSI, 1)
-    wiringpi.pinMode(SPIMISO, 0)
-    wiringpi.pinMode(SPICLK,  1)
-    wiringpi.pinMode(SPICS,   1)
-
-    wiringpi.pullUpDnControl(SPIMISO, 0)
+    reCon = DataReconstructor(redChannel, blueChannel)
+    logger = DataLogger("data.txt")
 
     while True:
         step = step + 1
-        redChannel = read_adc(redPin, SPICLK, SPIMOSI, SPIMISO, SPICS) * redMult
-        greenChannel = read_adc(greenPin, SPICLK, SPIMOSI, SPIMISO, SPICS) * greenMult
-        blueChannel = read_adc(bluePin, SPICLK, SPIMOSI, SPIMISO, SPICS) * blueMult
+        redChannel.currentValue = read_adc(redChannel.adcpin, sCon) * redChannel.multiplier
+        greenChannel.currentValue = read_adc(greenChannel.adcpin, sCon) * greenChannel.multiplier
+        blueChannel.currentValue = read_adc(blueChannel.adcpin, sCon) * blueChannel.multiplier
 
-        redAvg.append(redChannel)
-        sRed = 0
-        for i in redAvg:
-            sRed += i
-        sRed = sRed/len(redAvg)
+        reCon.process()
 
-        greenAvg.append(greenChannel)
-        sGreen = 0
-        for i in greenAvg:
-            sGreen += i
-        sGreen = sGreen/len(greenAvg)
+        logger.log(step, redChannel.currentValue, greenChannel.currentValue, blueChannel.currentValue,
+                   redChannel.smoothedValue, greenChannel.smoothedValue, blueChannel.smoothedValue,
+                   redChannel.hysteresisValue, greenChannel.hysteresisValue, blueChannel.hysteresisValue)
 
-        blueAvg.append(blueChannel)
-        sBlue = 0
-        for i in blueAvg:
-            sBlue += i
-        sBlue = sBlue/len(blueAvg)
-
-        if sRed > hHi:
-            hRed = 1.0
-            recoveredData = 1
-        if sRed < hLo:
-            recoveredData = 0
-            hRed = 0.0
-
-        if sGreen > hHi:
-            hGreen = 1.4
-            recoveredOOB = 1
-        if sGreen < hLo:
-            hGreen = 1.2
-            recoveredOOB = 0
-
-        if sBlue > hHi:
-            hBlue = 1.7
-            recoveredClock = 1
-        if sBlue < hLo:
-            hBlue = 1.5
-            recoveredClock = 0
-
-        if lastClock == 1 and recoveredClock == 0:
-            recoveredStream.append(recoveredData)
-            print recoveredStream
-
-        lastClock = recoveredClock
-
-        dataFile.write("%d,%d,%d,%d,%d,%d,%d,%f,%f,%f\n" % (redChannel, greenChannel, blueChannel, step, sRed, sGreen, sBlue, hRed, hGreen, hBlue))
-
-        time.sleep(0.01)
+        time.sleep(0.001)
 
 if __name__ == "__main__":
     main()

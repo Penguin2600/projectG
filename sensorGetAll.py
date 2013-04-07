@@ -83,11 +83,15 @@ class DataLogger(object):
     def __init__(self, fileName):
         super(DataLogger, self).__init__()
         self.fileName = fileName
+        self.dataFile = open(self.fileName, "w")
+        self.dataFile.write('')
+        self.dataFile.close()
 
     def log(self, *args):
-        self.dataFile = open(self.fileName, "w")
-        newLine = ','.join([repr(value) for value in enumerate(args)])
+        self.dataFile = open(self.fileName, "a")
+        newLine = ','.join([repr(value) for index, value in enumerate(args)])
         self.dataFile.write(newLine)
+        self.dataFile.write("\n")
         self.dataFile.close()
 
 

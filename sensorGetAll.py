@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 import time
-import os
 import wiringpi
 import collections
 
+
 # read SPI data from MCP3008 chip, 8 possible adc's (0 thru 7)
-def readadc(adcnum, clockpin, mosipin, misopin, cspin):
+def read_adc(adcnum, clockpin, mosipin, misopin, cspin):
     if ((adcnum > 7) or (adcnum < 0)):
         return -1
     wiringpi.digitalWrite(cspin, 1)
@@ -38,41 +38,41 @@ def readadc(adcnum, clockpin, mosipin, misopin, cspin):
     adcout >>= 1       # first bit is 'null' so drop it
     return adcout
 
+
 def main():
 
-    # change these as desired
     SPICLK = 1
     SPIMISO = 4
     SPIMOSI = 5
     SPICS = 6
 
-    redPin=0
-    greenPin=1
-    bluePin=2
+    redPin = 0
+    greenPin = 1
+    bluePin = 2
 
-    dataFile= open("data.txt", "w")
-    step=0
+    dataFile = open("data.txt", "w")
+    step = 0
 
-    redAvg=collections.deque(maxlen=6)
-    greenAvg=collections.deque(maxlen=6)
-    blueAvg=collections.deque(maxlen=6)
+    redAvg = collections.deque(maxlen=6)
+    greenAvg = collections.deque(maxlen=6)
+    blueAvg = collections.deque(maxlen=6)
 
-    hRed=0.0
-    hgreen=1.2
-    hBlue=1.5
+    hRed = 0.0
+    hgreen = 1.2
+    hBlue = 1.5
 
-    redMult=1.0
-    greenMult=1.0
-    blueMult=1.4
+    redMult = 1.0
+    greenMult = 1.0
+    blueMult = 1.4
 
-    hHi=112
-    hLo=56
+    hHi = 112
+    hLo = 56
 
-    recoveredClock=0
-    recoveredData=0
-    recoveredOOB=0
-    recoveredStream=[]
-    lastClock=0
+    recoveredClock = 0
+    recoveredData = 0
+    recoveredOOB = 0
+    recoveredStream = []
+    lastClock = 0
 
     #Do Setup
     wiringpi.wiringPiSetup()
@@ -86,57 +86,57 @@ def main():
     wiringpi.pullUpDnControl(SPIMISO, 0)
 
     while True:
-        step=step+1
-        redChannel = readadc(redPin, SPICLK, SPIMOSI, SPIMISO, SPICS) * redMult
-        greenChannel = readadc(greenPin, SPICLK, SPIMOSI, SPIMISO, SPICS) * greenMult
-        blueChannel = readadc(bluePin, SPICLK, SPIMOSI, SPIMISO, SPICS) * blueMult
-            
+        step = step + 1
+        redChannel = read_adc(redPin, SPICLK, SPIMOSI, SPIMISO, SPICS) * redMult
+        greenChannel = read_adc(greenPin, SPICLK, SPIMOSI, SPIMISO, SPICS) * greenMult
+        blueChannel = read_adc(bluePin, SPICLK, SPIMOSI, SPIMISO, SPICS) * blueMult
+
         redAvg.append(redChannel)
-        sRed=0
+        sRed = 0
         for i in redAvg:
-        	sRed+=i
-        sRed=sRed/len(redAvg)
+            sRed += i
+        sRed = sRed/len(redAvg)
 
         greenAvg.append(greenChannel)
-        sGreen=0
+        sGreen = 0
         for i in greenAvg:
-            sGreen+=i
-        sGreen=sGreen/len(greenAvg)
+            sGreen += i
+        sGreen = sGreen/len(greenAvg)
 
         blueAvg.append(blueChannel)
-        sBlue=0
+        sBlue = 0
         for i in blueAvg:
-            sBlue+=i
-        sBlue=sBlue/len(blueAvg)
+            sBlue += i
+        sBlue = sBlue/len(blueAvg)
 
         if sRed > hHi:
-            hRed=1.0
-            recoveredData=1
+            hRed = 1.0
+            recoveredData = 1
         if sRed < hLo:
-            recoveredData=0
-            hRed=0.0
+            recoveredData = 0
+            hRed = 0.0
 
         if sGreen > hHi:
-            hGreen=1.4
-            recoveredOOB=1
+            hGreen = 1.4
+            recoveredOOB = 1
         if sGreen < hLo:
-            hGreen=1.2
-            recoveredOOB=0
+            hGreen = 1.2
+            recoveredOOB = 0
 
         if sBlue > hHi:
-            hBlue=1.7
-            recoveredClock=1
+            hBlue = 1.7
+            recoveredClock = 1
         if sBlue < hLo:
-            hBlue=1.5
-            recoveredClock=0
+            hBlue = 1.5
+            recoveredClock = 0
 
-        if lastClock==1 and recoveredClock==0:
+        if lastClock == 1 and recoveredClock == 0:
             recoveredStream.append(recoveredData)
             print recoveredStream
-            
-        lastClock=recoveredClock
 
-        dataFile.write("%d,%d,%d,%d,%d,%d,%d,%f,%f,%f\n" % (redChannel, greenChannel, blueChannel,step,sRed,sGreen,sBlue,hRed,hGreen,hBlue,))
+        lastClock = recoveredClock
+
+        dataFile.write("%d,%d,%d,%d,%d,%d,%d,%f,%f,%f\n" % (redChannel, greenChannel, blueChannel, step, sRed, sGreen, sBlue, hRed, hGreen, hBlue))
 
         time.sleep(0.01)
 

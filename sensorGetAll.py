@@ -26,8 +26,8 @@ class AdcChannel(object):
         self.hysteresisValue = 0
         self.smoothWidth = 6
         self.smoothedValue = 0
-        self.currentValue = 0
-        self.lastValue = 0
+        self._currentValue = 0
+        self._lastValue = 0
         self.average = collections.deque(maxlen=self.smoothWidth)
 
         for i in range(0, self.smoothWidth):
@@ -45,21 +45,21 @@ class AdcChannel(object):
 
     @property
     def currentValue(self):
-        return self.currentValue
+        return self._currentValue
 
     @currentValue.setter
     def currentValue(self, value):
-        self.currentValue = value
+        self._currentValue = value
         self.smooth_input()
         self.apply_hysteresis()
 
     @property
     def lastValue(self):
-        return self.lastValue
+        return self._lastValue
 
     @lastValue.setter
     def lastValue(self, value):
-        self.lastValue = value
+        self._lastValue = value
 
 
 class DataReconstructor(object):

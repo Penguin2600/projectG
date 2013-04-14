@@ -111,7 +111,7 @@ def read_adc(adcnum, sCon):
     if ((adcnum > 7) or (adcnum < 0)):
         return -1
     wiringpi.digitalWrite(sCon.cspin, 1)
-    wiringpi.digitalWrite(sCon.clockpin, 0)  # start clock low
+    wiringpi.digitalWrite(sCon.clkpin, 0)  # start clock low
     wiringpi.digitalWrite(sCon.cspin, 0)     # bring CS low
 
     commandout = adcnum
@@ -123,14 +123,14 @@ def read_adc(adcnum, sCon):
         else:
             wiringpi.digitalWrite(sCon.mosipin, 0)
         commandout <<= 1
-        wiringpi.digitalWrite(sCon.clockpin, 1)
-        wiringpi.digitalWrite(sCon.clockpin, 0)
+        wiringpi.digitalWrite(sCon.clkpin, 1)
+        wiringpi.digitalWrite(sCon.clkpin, 0)
 
     adcout = 0
     # read in one empty bit, one null bit and 10 ADC bits
     for i in range(12):
-        wiringpi.digitalWrite(sCon.clockpin, 1)
-        wiringpi.digitalWrite(sCon.clockpin, 0)
+        wiringpi.digitalWrite(sCon.clkpin, 1)
+        wiringpi.digitalWrite(sCon.clkpin, 0)
         adcout <<= 1
         if (wiringpi.digitalRead(sCon.misopin)):
             adcout |= 0x1

@@ -81,7 +81,7 @@ class DataReconstructor(object):
             self.decodeAscii(self.recoveredData)
             self.recoveredData = []
 
-    def decodeAscii(byteStr):
+    def decodeAscii(self, byteStr):
         chrVal = 0
         bitPos = 8
 

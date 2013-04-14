@@ -77,6 +77,21 @@ class DataReconstructor(object):
             self.recoveredData.append(self.dataChannel.hysteresisValue)
         self.lastClock = self.clockChannel.hysteresisValue
 
+        if len(self.recoveredData) == 8:
+            self.decodeAscii(self.recoveredData)
+            self.recoveredData = []
+
+    def decodeAscii(byteStr):
+        chrVal = 0
+        bitPos = 8
+
+        for bit in byteStr:
+            bitPos -= 1
+            if bit == "1":
+                chrVal += (2**bitPos)
+
+        return chr(chrVal)
+
 
 class DataLogger(object):
     """Dumps values list to comma separated file"""
@@ -161,7 +176,6 @@ def main():
         blueChannel.currentValue = read_adc(blueChannel.adcpin, sCon) * blueChannel.multiplier
 
         reCon.process()
-
         logger.log(step, redChannel.currentValue, greenChannel.currentValue, blueChannel.currentValue,
                    redChannel.smoothedValue, greenChannel.smoothedValue, blueChannel.smoothedValue,
                    redChannel.hysteresisValue*0.2, ((greenChannel.hysteresisValue*0.2)+0.3), ((blueChannel.hysteresisValue*0.2)+0.6))

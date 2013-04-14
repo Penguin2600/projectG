@@ -164,7 +164,7 @@ def main():
 
         logger.log(step, redChannel.currentValue, greenChannel.currentValue, blueChannel.currentValue,
                    redChannel.smoothedValue, greenChannel.smoothedValue, blueChannel.smoothedValue,
-                   redChannel.hysteresisValue, greenChannel.hysteresisValue, blueChannel.hysteresisValue)
+                   redChannel.hysteresisValue*0.2, ((greenChannel.hysteresisValue*0.2)+0.3), ((blueChannel.hysteresisValue*0.2)+0.6))
 
         time.sleep(0.001)
 

@@ -87,7 +87,7 @@ class DataReconstructor(object):
 
         for bit in byteStr:
             bitPos -= 1
-            if bit == "1":
+            if bit:
                 chrVal += (2**bitPos)
 
         return chr(chrVal)

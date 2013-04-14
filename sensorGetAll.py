@@ -78,7 +78,7 @@ class DataReconstructor(object):
         self.lastClock = self.clockChannel.hysteresisValue
 
         if len(self.recoveredData) == 8:
-            self.decodeAscii(self.recoveredData)
+            print self.decodeAscii(self.recoveredData)
             self.recoveredData = []
 
     def decodeAscii(self, byteStr):
